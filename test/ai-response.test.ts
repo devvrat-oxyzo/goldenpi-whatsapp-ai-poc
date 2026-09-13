@@ -5,6 +5,7 @@ import type {
   AiResponder,
 } from "../src/ai/ai-responder.js";
 import { createAiResponderFromEnvironment } from "../src/ai/create-ai-responder.js";
+import { publicInformationGenerationConfig } from "../src/ai/vertex-ai-responder.js";
 import { NormalizedInboundMessageSchema } from "../src/contracts/message.js";
 import { processInbound } from "../src/simulator/process-inbound.js";
 
@@ -96,5 +97,12 @@ describe("controlled AI response", () => {
     expect(() =>
       createAiResponderFromEnvironment({ AI_RESPONSE_MODE: "unknown" }),
     ).toThrow("Unsupported AI_RESPONSE_MODE");
+  });
+
+  it("uses a low thinking level with enough room for the final answer", () => {
+    expect(publicInformationGenerationConfig).toMatchObject({
+      maxOutputTokens: 1_024,
+      thinkingConfig: { thinkingLevel: "LOW" },
+    });
   });
 });

@@ -46,6 +46,8 @@ Implementation checkpoint:
 - Added safe diagnostic fields for model, prompt ID/version, skill ID, and response source.
 - Selected configurable `gemini-3.5-flash` in `asia-south1`; no API key is stored.
 - Local TypeScript validation, 22 of 22 tests, and the production build passed.
+- First live Vertex AI invocation succeeded technically, but its 300-token output allowance produced a truncated answer; T1.4 remained open.
+- Corrective checkpoint sets Gemini 3.5 Flash thinking to `LOW`, raises the total output allowance to 1,024 tokens, and rejects `MAX_TOKENS` responses so incomplete text falls back safely.
 
 ## Active task
 
@@ -378,3 +380,4 @@ The future WATI endpoint will be internet-reachable because WATI must call it. I
 - 2026-09-13 — Corrected fragmented stdout logging in commit `a959ed8`, passed 18/18 tests, and deployed revision `goldenpi-whatsapp-poc-00002-f7t`.
 - 2026-09-13 — Verified one-row structured `jsonPayload` logging with no message or sender PII. Closed T1.3 and proposed T1.4 controlled Gemini integration.
 - 2026-09-13 — User approved T1.4. Added versioned Markdown prompt modules, a mockable Gemini boundary, deterministic routing, safe fallback behavior, and 22 passing tests. Codespaces and live Vertex AI verification remain pending.
+- 2026-09-13 — First live Gemini call authenticated and used the intended prompt/model, but returned a truncated fragment. Kept T1.4 open and prepared a low-thinking, larger-output, truncation-safe correction.

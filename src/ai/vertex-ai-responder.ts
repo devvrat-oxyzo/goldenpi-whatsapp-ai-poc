@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { FinishReason, GoogleGenAI, ThinkingLevel } from "@google/genai";
 import type { AiAnswer, AiAnswerRequest, AiResponder } from "./ai-responder.js";
 
 export interface VertexAiResponderConfig {
@@ -7,6 +7,14 @@ export interface VertexAiResponderConfig {
   model: string;
   timeoutMs?: number;
 }
+
+export const publicInformationGenerationConfig = {
+  temperature: 0.2,
+  maxOutputTokens: 1_024,
+  thinkingConfig: {
+    thinkingLevel: ThinkingLevel.LOW,
+  },
+};
 
 export class VertexAiResponder implements AiResponder {
   private readonly client: GoogleGenAI;
@@ -37,10 +45,14 @@ export class VertexAiResponder implements AiResponder {
           request.prompt.masterInstruction,
           request.prompt.skillInstruction,
         ].join("\n\n"),
-        temperature: 0.2,
-        maxOutputTokens: 300,
+        ...publicInformationGenerationConfig,
       },
     });
+
+    const finishReason = response.candidates?.[0]?.finishReason;
+    if (finishReason === FinishReason.MAX_TOKENS) {
+      throw new Error("Vertex AI response reached the output-token limit");
+    }
 
     const text = response.text?.trim();
     if (!text) {
