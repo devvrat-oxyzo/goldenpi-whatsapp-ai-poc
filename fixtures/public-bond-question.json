@@ -1,0 +1,31 @@
+{
+  "inbound": {
+    "schemaVersion": "1.0",
+    "traceId": "4e05cf9a-8d88-4e2d-a5bd-36137c6821af",
+    "provider": "simulator",
+    "providerMessageId": "simulator-message-001",
+    "channel": "simulator",
+    "sender": {
+      "externalId": "poc-user-001"
+    },
+    "content": {
+      "type": "text",
+      "text": "What is a bond?"
+    },
+    "authentication": {
+      "level": "ANONYMOUS"
+    },
+    "receivedAt": "2026-09-13T12:30:00+05:30"
+  },
+  "classification": {
+    "intent": "PUBLIC_INFORMATION",
+    "confidence": 0.98
+  },
+  "expectedDecision": {
+    "action": "ALLOW_AI_RESPONSE",
+    "reason": "PUBLIC_INFORMATION_ALLOWED",
+    "allowAiResponse": true,
+    "allowCustomerData": false,
+    "requiresHuman": false
+  }
+}
