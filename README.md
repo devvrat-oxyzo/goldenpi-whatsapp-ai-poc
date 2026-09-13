@@ -1,8 +1,10 @@
-# GoldenPi WhatsApp POC — T0.2 Contracts
+# GoldenPi WhatsApp AI POC
 
 This package defines the provider-neutral boundary between a WhatsApp provider adapter, GoldenPi policy controls, and the future Gemini response service.
 
-## What this checkpoint includes
+## Completed checkpoints
+
+### T0.2 — Provider-neutral contracts
 
 - Strict TypeScript/Zod validation for inbound and outbound messages.
 - Explicit authentication levels.
@@ -11,7 +13,16 @@ This package defines the provider-neutral boundary between a WhatsApp provider a
 - A simulator fixture for `What is a bond?`.
 - Automated tests for valid input, unsafe/invalid input, authentication, customer data, and investment recommendations.
 
-No network calls, Google Cloud mutations, BigQuery access, Gemini calls, or WATI calls occur in this checkpoint.
+### T1.1 — Local REST service
+
+- `GET /health` returns service status.
+- `POST /v1/simulate` validates the normalized inbound-message contract.
+- A deterministic classifier applies the approved POC policy.
+- A fixed educational response answers `What is a bond?`.
+- Structured logs exclude message text, sender identity, and phone number.
+- Request bodies are limited to 64 KiB.
+
+No Google Cloud mutations, BigQuery access, Gemini calls, or WATI calls occur in these checkpoints.
 
 ## Rule matrix
 
@@ -24,20 +35,38 @@ No network calls, Google Cloud mutations, BigQuery access, Gemini calls, or WATI
 | Investment recommendation | Any | Human handoff | No | No |
 | Unsupported | Any | Human handoff | No | No |
 
-## Local verification
+## Local development
 
 ```bash
-npm install
+npm ci
 npm run check
+npm run build
+npm start
 ```
 
-Expected result: TypeScript completes without errors and all tests pass.
+The server listens on `PORT`, defaulting to `8080`.
+
+Test health in a second terminal:
+
+```bash
+curl http://localhost:8080/health
+```
+
+Test the simulator:
+
+```bash
+jq -c '.inbound' fixtures/public-bond-question.json | \
+  curl -H 'content-type: application/json' \
+  --data-binary @- \
+  http://localhost:8080/v1/simulate
+```
+
+Expected validation result: TypeScript completes without errors and all 13 tests pass.
 
 ## Next checkpoint
 
-T1.1 will wrap these contracts in an HTTP service with:
+T1.2 will add a provider-adapter boundary while retaining the simulator:
 
-- `GET /health`
-- `POST /v1/simulate`
-- private Cloud Run deployment
-- structured, PII-safe request logging
+- validate a provider webhook envelope
+- normalize it into the existing inbound contract
+- keep WATI-specific logic isolated from policy and AI logic

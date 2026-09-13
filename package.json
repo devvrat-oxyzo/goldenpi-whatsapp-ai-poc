@@ -8,6 +8,8 @@
   },
   "scripts": {
     "build": "tsc",
+    "start": "node dist/src/server.js",
+    "dev": "node --watch --import=tsx src/server.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "check": "npm run typecheck && npm test"
@@ -17,6 +19,7 @@
   },
   "devDependencies": {
     "@types/node": "26.5.1",
+    "tsx": "4.20.6",
     "typescript": "7.0.2",
     "vitest": "5.0.0"
   }
