@@ -15,6 +15,11 @@ interface SafeLogEvent {
   status: number;
   traceId?: string;
   policyAction?: string;
+  responseSource?: string;
+  promptId?: string;
+  promptVersion?: string;
+  skillId?: string;
+  model?: string;
   elapsedMs: number;
 }
 
@@ -49,7 +54,10 @@ async function readJson(request: IncomingMessage): Promise<unknown> {
   return JSON.parse(Buffer.concat(chunks).toString("utf8"));
 }
 
-export function createApp(logger: SafeLogger = writeSafeLog) {
+export function createApp(
+  logger: SafeLogger = writeSafeLog,
+  aiResponder: AiResponder = new FixedAiResponder(),
+) {
   return createServer(async (request, response) => {
     const startedAt = performance.now();
     const method = request.method;
@@ -75,7 +83,7 @@ export function createApp(logger: SafeLogger = writeSafeLog) {
       try {
         const body = await readJson(request);
         const inbound = NormalizedInboundMessageSchema.parse(body);
-        const result = processInbound(inbound);
+        const result = await processInbound(inbound, aiResponder);
 
         sendJson(response, 200, result);
         logger({
@@ -85,6 +93,11 @@ export function createApp(logger: SafeLogger = writeSafeLog) {
           status: 200,
           traceId: inbound.traceId,
           policyAction: result.decision,
+          responseSource: result.diagnostic.responseSource,
+          promptId: result.diagnostic.promptId,
+          promptVersion: result.diagnostic.promptVersion,
+          skillId: result.diagnostic.skillId,
+          model: result.diagnostic.model,
           elapsedMs: Math.round(performance.now() - startedAt),
         });
       } catch (error) {
@@ -116,7 +129,7 @@ export function createApp(logger: SafeLogger = writeSafeLog) {
       try {
         const body = await readJson(request);
         const inbound = watiAdapter.normalize(body);
-        const result = processInbound(inbound);
+        const result = await processInbound(inbound, aiResponder);
 
         sendJson(response, 200, {
           accepted: true,
@@ -130,6 +143,11 @@ export function createApp(logger: SafeLogger = writeSafeLog) {
           status: 200,
           traceId: inbound.traceId,
           policyAction: result.decision,
+          responseSource: result.diagnostic.responseSource,
+          promptId: result.diagnostic.promptId,
+          promptVersion: result.diagnostic.promptVersion,
+          skillId: result.diagnostic.skillId,
+          model: result.diagnostic.model,
           elapsedMs: Math.round(performance.now() - startedAt),
         });
       } catch (error) {
@@ -164,3 +182,5 @@ export function createApp(logger: SafeLogger = writeSafeLog) {
     });
   });
 }
+import type { AiResponder } from "../ai/ai-responder.js";
+import { FixedAiResponder } from "../ai/ai-responder.js";

@@ -1,6 +1,6 @@
 # GoldenPi WhatsApp AI POC
 
-This package defines the provider-neutral boundary between a WhatsApp provider adapter, GoldenPi policy controls, and the future Gemini response service.
+This package defines the provider-neutral boundary between a WhatsApp provider adapter, GoldenPi policy controls, and Gemini on Vertex AI.
 
 ## Completed checkpoints
 
@@ -30,7 +30,7 @@ This package defines the provider-neutral boundary between a WhatsApp provider a
 - Raw WhatsApp numbers are pseudonymized before entering the internal contract.
 - Provider parsing remains separate from classification and policy enforcement.
 
-No Google Cloud mutations, BigQuery access, Gemini calls, or WATI calls occur in these checkpoints.
+No BigQuery access or outbound WATI calls occur in these checkpoints.
 
 ### T1.3 — Cloud Run packaging
 
@@ -39,6 +39,16 @@ No Google Cloud mutations, BigQuery access, Gemini calls, or WATI calls occur in
 - Direct production entry point through `Procfile`.
 - `.gcloudignore` excludes local, generated, secret, and archive files.
 - Private deployment runbook in `docs/cloud-run-poc.md`.
+
+### T1.4 — Controlled Gemini boundary
+
+- Versioned master instructions in `prompts/master.md`.
+- Allowlisted public-bond skill in `prompts/skills/public-bond-education/SKILL.md`.
+- Gemini is invoked only after deterministic policy returns `ALLOW_AI_RESPONSE`.
+- The official `@google/genai` SDK uses Cloud Run application-default credentials.
+- Gemini failure returns the approved fixed educational fallback.
+- BigQuery and customer data remain disabled.
+- The model, prompt ID, prompt version, skill ID, and response source are observable without logging the question or answer.
 
 ## Rule matrix
 
@@ -85,15 +95,17 @@ curl -H 'content-type: application/json' \
   http://localhost:8080/v1/providers/wati/webhook
 ```
 
-Expected validation result: TypeScript completes without errors and all 17 tests pass.
+Expected validation result: TypeScript completes without errors and all 22 tests pass.
 
-## Next checkpoint
+## Gemini configuration
 
-T1.3 will deploy the fixed-response service privately to Cloud Run:
+Local development defaults to the fixed responder. A live Vertex AI call is enabled only with explicit server-side environment variables:
 
-- dedicated runtime service account
-- Google IAM-authenticated invocation
-- `asia-south1` deployment
-- no BigQuery, Gemini, or WATI credentials yet
+```bash
+AI_RESPONSE_MODE=vertex
+VERTEX_PROJECT_ID=goldenpi-data-layer
+VERTEX_LOCATION=asia-south1
+VERTEX_MODEL=gemini-3.5-flash
+```
 
-Follow [`docs/cloud-run-poc.md`](docs/cloud-run-poc.md) only after the repository checkpoint has been verified.
+No API key is stored. Cloud Run authenticates through its dedicated runtime service account. Follow [`docs/vertex-ai-poc.md`](docs/vertex-ai-poc.md) only after the repository checkpoint has been verified.

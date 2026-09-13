@@ -29,13 +29,23 @@ Build a modular, provider-agnostic REST backend for a GoldenPi WhatsApp support 
 
 ## Current checkpoint
 
-### T1.3 — Deploy and test the fixed reply privately
+### T1.4 — Connect Gemini for controlled public-information answers
 
-Status: **Complete**
+Status: **Local implementation complete; Codespaces and Cloud Run verification pending**
 
-Next proposed task: **T1.4 — Connect Gemini for controlled public-information answers.**
+Approved by the user on 2026-09-13.
 
-T1.4 will retain deterministic policy enforcement outside the model, keep BigQuery and customer data disabled, and replace only the fixed public-information answer with a Vertex AI Gemini response. It does not begin until the user accepts it as the next active task.
+Implementation checkpoint:
+
+- Added version-controlled `prompts/master.md`.
+- Added allowlisted `prompts/skills/public-bond-education/SKILL.md`.
+- Added a mockable AI-responder boundary and Vertex AI implementation using `@google/genai`.
+- Gemini is called only after deterministic policy returns `ALLOW_AI_RESPONSE`.
+- Added a fixed approved fallback for Vertex AI errors or empty responses.
+- Kept BigQuery, customer data, external tools, and WATI outbound calls disabled.
+- Added safe diagnostic fields for model, prompt ID/version, skill ID, and response source.
+- Selected configurable `gemini-3.5-flash` in `asia-south1`; no API key is stored.
+- Local TypeScript validation, 22 of 22 tests, and the production build passed.
 
 ## Active task
 
@@ -189,7 +199,7 @@ Completion criteria:
 | T1.1 | Scaffold REST API with health endpoint | P0 | Complete |
 | T1.2 | Implement initial provider webhook adapter | P0 | Complete |
 | T1.3 | Deploy and test fixed reply | P0 | Complete |
-| T1.4 | Connect controlled Gemini public-information response | P0 | Proposed |
+| T1.4 | Connect controlled Gemini public-information response | P0 | Local implementation complete; verification pending |
 | T2.1 | Define customer-verification policy | P0 | Not started |
 | T2.2 | Create/read approved BigQuery customer view | P0 | Not started |
 | T2.3 | Add OTP or secure-link flow for sensitive data | P0 | Not started |
@@ -367,3 +377,4 @@ The future WATI endpoint will be internet-reachable because WATI must call it. I
 - 2026-09-13 — Deployed private Cloud Run revision `goldenpi-whatsapp-poc-00001-zzs`; verified IAM-only access and the fixed simulator response.
 - 2026-09-13 — Corrected fragmented stdout logging in commit `a959ed8`, passed 18/18 tests, and deployed revision `goldenpi-whatsapp-poc-00002-f7t`.
 - 2026-09-13 — Verified one-row structured `jsonPayload` logging with no message or sender PII. Closed T1.3 and proposed T1.4 controlled Gemini integration.
+- 2026-09-13 — User approved T1.4. Added versioned Markdown prompt modules, a mockable Gemini boundary, deterministic routing, safe fallback behavior, and 22 passing tests. Codespaces and live Vertex AI verification remain pending.

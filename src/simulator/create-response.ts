@@ -1,8 +1,6 @@
+import type { AiAnswer, AiResponseSource } from "../ai/ai-responder.js";
 import type { NormalizedInboundMessage } from "../contracts/message.js";
 import type { PolicyDecision } from "../contracts/policy.js";
-
-const publicBondAnswer =
-  "A bond is a debt instrument. When you buy one, you lend money to an issuer—such as a company or government—which generally promises interest payments and repayment of principal at maturity. Bonds carry risks, including credit, interest-rate, and liquidity risk.";
 
 export interface SimulatorResponse {
   traceId: string;
@@ -13,19 +11,27 @@ export interface SimulatorResponse {
   diagnostic: {
     reason: PolicyDecision["reason"];
     customerDataAccessed: false;
-    responseSource: "POC_FIXED";
+    responseSource: AiResponseSource;
+    promptId?: string;
+    promptVersion?: string;
+    skillId?: string;
+    model?: string;
   };
 }
 
 export function createSimulatorResponse(
   inbound: NormalizedInboundMessage,
   decision: PolicyDecision,
+  aiAnswer?: AiAnswer,
 ): SimulatorResponse {
   let answer: string;
 
   switch (decision.action) {
     case "ALLOW_AI_RESPONSE":
-      answer = publicBondAnswer;
+      if (!aiAnswer) {
+        throw new Error("An AI answer is required for ALLOW_AI_RESPONSE");
+      }
+      answer = aiAnswer.text;
       break;
     case "REQUIRE_AUTHENTICATION":
       answer = "Please authenticate before requesting customer-specific information.";
@@ -44,7 +50,11 @@ export function createSimulatorResponse(
     diagnostic: {
       reason: decision.reason,
       customerDataAccessed: false,
-      responseSource: "POC_FIXED",
+      responseSource: aiAnswer?.responseSource ?? "POC_FIXED",
+      promptId: aiAnswer?.promptId,
+      promptVersion: aiAnswer?.promptVersion,
+      skillId: aiAnswer?.skillId,
+      model: aiAnswer?.model,
     },
   };
 }
