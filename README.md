@@ -22,6 +22,14 @@ This package defines the provider-neutral boundary between a WhatsApp provider a
 - Structured logs exclude message text, sender identity, and phone number.
 - Request bodies are limited to 64 KiB.
 
+### T1.2 — WATI inbound adapter boundary
+
+- `POST /v1/providers/wati/webhook` accepts a WATI message-received payload.
+- WATI fields are converted into the existing provider-neutral contract.
+- Only text messages are supported during this checkpoint.
+- Raw WhatsApp numbers are pseudonymized before entering the internal contract.
+- Provider parsing remains separate from classification and policy enforcement.
+
 No Google Cloud mutations, BigQuery access, Gemini calls, or WATI calls occur in these checkpoints.
 
 ## Rule matrix
@@ -61,12 +69,21 @@ jq -c '.inbound' fixtures/public-bond-question.json | \
   http://localhost:8080/v1/simulate
 ```
 
-Expected validation result: TypeScript completes without errors and all 13 tests pass.
+Test the saved WATI webhook fixture:
+
+```bash
+curl -H 'content-type: application/json' \
+  --data-binary @fixtures/wati-message-received.json \
+  http://localhost:8080/v1/providers/wati/webhook
+```
+
+Expected validation result: TypeScript completes without errors and all 17 tests pass.
 
 ## Next checkpoint
 
-T1.2 will add a provider-adapter boundary while retaining the simulator:
+T1.3 will deploy the fixed-response service privately to Cloud Run:
 
-- validate a provider webhook envelope
-- normalize it into the existing inbound contract
-- keep WATI-specific logic isolated from policy and AI logic
+- dedicated runtime service account
+- Google IAM-authenticated invocation
+- `asia-south1` deployment
+- no BigQuery, Gemini, or WATI credentials yet

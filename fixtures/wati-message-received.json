@@ -1,0 +1,17 @@
+{
+  "id": "wati-record-poc-001",
+  "created": "2026-09-13T12:00:00.000Z",
+  "whatsappMessageId": "wamid.poc-message-001",
+  "conversationId": "wati-conversation-poc-001",
+  "ticketId": "wati-ticket-poc-001",
+  "text": "What is a bond?",
+  "type": "text",
+  "timestamp": "1789300800",
+  "owner": false,
+  "eventType": "message",
+  "statusString": "Received",
+  "waId": "919999999999",
+  "senderName": "POC User",
+  "channelPhoneNumber": "918888888888",
+  "bsuid": null
+}

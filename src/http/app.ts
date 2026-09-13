@@ -2,9 +2,9 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { performance } from "node:perf_hooks";
 import { ZodError } from "zod";
 import { NormalizedInboundMessageSchema } from "../contracts/message.js";
-import { evaluatePolicy } from "../policy/evaluate-policy.js";
-import { classifyIntent } from "../simulator/classify-intent.js";
-import { createSimulatorResponse } from "../simulator/create-response.js";
+import { UnsupportedProviderMessageError } from "../providers/provider-adapter.js";
+import { watiAdapter } from "../providers/wati/wati-adapter.js";
+import { processInbound } from "../simulator/process-inbound.js";
 
 const maximumBodyBytes = 64 * 1024;
 
@@ -71,13 +71,7 @@ export function createApp(logger: SafeLogger = console.info) {
       try {
         const body = await readJson(request);
         const inbound = NormalizedInboundMessageSchema.parse(body);
-        const classification = classifyIntent(inbound.content.text);
-        const decision = evaluatePolicy({
-          traceId: inbound.traceId,
-          authenticationLevel: inbound.authentication.level,
-          classification,
-        });
-        const result = createSimulatorResponse(inbound, decision);
+        const result = processInbound(inbound);
 
         sendJson(response, 200, result);
         logger({
@@ -86,7 +80,7 @@ export function createApp(logger: SafeLogger = console.info) {
           path,
           status: 200,
           traceId: inbound.traceId,
-          policyAction: decision.action,
+          policyAction: result.decision,
           elapsedMs: Math.round(performance.now() - startedAt),
         });
       } catch (error) {
@@ -103,6 +97,48 @@ export function createApp(logger: SafeLogger = console.info) {
                 ? "Request body exceeds 64 KiB."
                 : "Request body must contain valid JSON.",
         });
+        logger({
+          event: "request.rejected",
+          method,
+          path,
+          status,
+          elapsedMs: Math.round(performance.now() - startedAt),
+        });
+      }
+      return;
+    }
+
+    if (method === "POST" && path === "/v1/providers/wati/webhook") {
+      try {
+        const body = await readJson(request);
+        const inbound = watiAdapter.normalize(body);
+        const result = processInbound(inbound);
+
+        sendJson(response, 200, {
+          accepted: true,
+          providerMessageId: inbound.providerMessageId,
+          result,
+        });
+        logger({
+          event: "request.completed",
+          method,
+          path,
+          status: 200,
+          traceId: inbound.traceId,
+          policyAction: result.decision,
+          elapsedMs: Math.round(performance.now() - startedAt),
+        });
+      } catch (error) {
+        const unsupported = error instanceof UnsupportedProviderMessageError;
+        const tooLarge = error instanceof Error && error.message === "REQUEST_TOO_LARGE";
+        const status = unsupported ? 422 : tooLarge ? 413 : 400;
+        const code = unsupported
+          ? "UNSUPPORTED_MESSAGE_TYPE"
+          : tooLarge
+            ? "REQUEST_TOO_LARGE"
+            : "INVALID_PROVIDER_PAYLOAD";
+
+        sendJson(response, status, { error: code });
         logger({
           event: "request.rejected",
           method,

@@ -176,8 +176,8 @@ Completion criteria:
 | --- | --- | --- | --- |
 | T0.1 | Verify access and select first vertical slice | P0 | Complete |
 | T0.2 | Define normalized inbound/outbound message contract | P0 | Complete |
-| T1.1 | Scaffold REST API with health endpoint | P0 | Ready for Codespaces verification |
-| T1.2 | Implement initial provider webhook adapter | P0 | Not started |
+| T1.1 | Scaffold REST API with health endpoint | P0 | Complete |
+| T1.2 | Implement initial provider webhook adapter | P0 | Ready for Codespaces verification |
 | T1.3 | Deploy and test fixed reply | P0 | Not started |
 | T2.1 | Define customer-verification policy | P0 | Not started |
 | T2.2 | Create/read approved BigQuery customer view | P0 | Not started |
@@ -239,7 +239,7 @@ Approval received on 2026-09-13. T0.2 was committed to GitHub as `8dc95d0` after
 
 ### T1.1 — Scaffold the local REST API
 
-Status: **Ready for Codespaces verification**
+Status: **Complete**
 
 Implementation result:
 
@@ -260,6 +260,32 @@ Completion gate:
 - Start the service and confirm both endpoints in Codespaces.
 - Confirm that fixed-response behavior is accepted before connecting Gemini.
 
+Codespaces verification and approval completed on 2026-09-13. T1.1 was committed to GitHub as `a4ac9c0` after 13 of 13 tests, a production build, and manual endpoint tests passed.
+
+### T1.2 — Add the WATI inbound adapter boundary
+
+Status: **Ready for Codespaces verification**
+
+Implementation result:
+
+- Added a generic provider-adapter interface.
+- Added a WATI `message` / `messageReceived` webhook schema based on current WATI documentation.
+- Added `POST /v1/providers/wati/webhook`.
+- Normalized WATI text events into the existing inbound contract.
+- Pseudonymized the raw WATI sender identifier before internal processing.
+- Reused the existing classifier and policy without provider-specific changes.
+- Rejected malformed WATI payloads and unsupported non-text messages.
+- Added a synthetic WATI fixture containing no real customer data.
+- Automated tests passed: 17 of 17, including a post-build test run.
+- Manual WATI-fixture request returned `200`, `accepted: true`, and the expected public-information decision.
+
+Completion gate:
+
+- Commit T1.2 to GitHub.
+- Run `npm ci`, `npm run check`, and `npm run build` in Codespaces.
+- Start the service and submit the saved WATI fixture.
+- Confirm that the provider boundary is accepted before private Cloud Run deployment.
+
 ## Deferred production-ingress design
 
 The future WATI endpoint will be internet-reachable because WATI must call it. Internet-reachable does not mean unrestricted access to customer data. The proposed separation is:
@@ -278,3 +304,6 @@ The future WATI endpoint will be internet-reachable because WATI must call it. I
 - 2026-09-13 — Reviewed iPad screenshots. Supporting APIs confirmed, but Vertex AI, Cloud Run, and Cloud Build APIs remain unverified. Recorded iPad-first workflow and identified Marketplace Cloud Shell deployment page as unnecessary.
 - 2026-09-13 — Cloud Shell evidence confirmed Vertex AI, Cloud Build, and Cloud Run APIs enabled. Infrastructure Manager API disable completed successfully. Closed T0.1 and queued T0.2.
 - 2026-09-13 — Implemented T0.2 TypeScript/Zod contracts, deterministic policy rules, fixtures, and validation tests. Build passed and 8/8 tests passed. Awaiting user review.
+- 2026-09-13 — Approved and committed T0.2 as `8dc95d0`.
+- 2026-09-13 — Implemented and verified T1.1 REST simulator service with 13/13 tests; committed as `a4ac9c0`.
+- 2026-09-13 — Implemented T1.2 WATI inbound adapter boundary with a synthetic fixture and 17/17 tests. Awaiting Codespaces verification.
