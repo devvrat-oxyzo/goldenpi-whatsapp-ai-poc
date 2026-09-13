@@ -27,6 +27,16 @@ Build a modular, provider-agnostic REST backend for a GoldenPi WhatsApp support 
 | Sprint 5 — Controlled pilot | Not started | UAT passed with a restricted user group |
 | Sprint 6 — Sales capabilities | Deferred | Compliance-approved rules and measurement are ready |
 
+## Current checkpoint
+
+### T1.3 — Deploy and test the fixed reply privately
+
+Status: **Complete**
+
+Next proposed task: **T1.4 — Connect Gemini for controlled public-information answers.**
+
+T1.4 will retain deterministic policy enforcement outside the model, keep BigQuery and customer data disabled, and replace only the fixed public-information answer with a Vertex AI Gemini response. It does not begin until the user accepts it as the next active task.
+
 ## Active task
 
 ### T0.1 — Verify access and select the first vertical slice
@@ -148,8 +158,8 @@ Completion criteria:
 | --- | --- | --- |
 | Google Cloud | Project ID and billing enabled | Confirmed by user; command evidence pending |
 | API management | Permission or admin contact to enable APIs | Confirmed through successful service commands |
-| Cloud Run | Permission to deploy and configure ingress | API enabled; deployment proof moves to Sprint 1 |
-| IAM | Permission or admin contact to create/configure a service account | Likely available; unverified |
+| Cloud Run | Permission to deploy and configure ingress | Confirmed through private deployment in `asia-south1` |
+| IAM | Permission or admin contact to create/configure a service account | Confirmed; dedicated runtime identity deployed |
 | Vertex AI | API enabled, usable region, and model access | API enabled; model invocation proof moves to Sprint 1 |
 | BigQuery | Read-only access to approved data/views | User access confirmed; runtime access pending |
 | WhatsApp provider | Provider name, sandbox number, API token, webhook settings | WATI selected; credentials deferred |
@@ -178,7 +188,8 @@ Completion criteria:
 | T0.2 | Define normalized inbound/outbound message contract | P0 | Complete |
 | T1.1 | Scaffold REST API with health endpoint | P0 | Complete |
 | T1.2 | Implement initial provider webhook adapter | P0 | Complete |
-| T1.3 | Deploy and test fixed reply | P0 | Deployment preparation in progress |
+| T1.3 | Deploy and test fixed reply | P0 | Complete |
+| T1.4 | Connect controlled Gemini public-information response | P0 | Proposed |
 | T2.1 | Define customer-verification policy | P0 | Not started |
 | T2.2 | Create/read approved BigQuery customer view | P0 | Not started |
 | T2.3 | Add OTP or secure-link flow for sensitive data | P0 | Not started |
@@ -290,7 +301,7 @@ Codespaces verification and provisional approval completed on 2026-09-13. T1.2 w
 
 ### T1.3 — Deploy and test the fixed reply privately
 
-Status: **Deployment preparation in progress**
+Status: **Complete**
 
 Preparation result:
 
@@ -301,6 +312,24 @@ Preparation result:
 - Added `docs/cloud-run-poc.md` with explicit private deployment and authenticated health-test commands.
 - Selected runtime service account `gp-whatsapp-poc-runtime` with no BigQuery, Vertex AI, WATI, or Secret Manager roles.
 - Selected service name `goldenpi-whatsapp-poc` in `asia-south1`.
+
+Deployment and verification result:
+
+- Created and used runtime service account `gp-whatsapp-poc-runtime@goldenpi-data-layer.iam.gserviceaccount.com`.
+- Deployed private Cloud Run service `goldenpi-whatsapp-poc` in `asia-south1`.
+- Initial revision `goldenpi-whatsapp-poc-00001-zzs` served 100% of traffic.
+- Anonymous `/health` invocation returned `403`.
+- Google-IAM-authenticated `/health` invocation returned `200` and the expected service metadata.
+- Authenticated `/v1/simulate` returned `PUBLIC_INFORMATION`, `ALLOW_AI_RESPONSE`, and `customerDataAccessed: false`.
+- Service configuration confirmed ingress `all`, maximum scale `2`, concurrency `20`, and the dedicated runtime identity.
+- Service IAM policy contained no `allUsers` or `allAuthenticatedUsers` binding.
+- Initial application objects were fragmented across multiple `textPayload` entries, so T1.3 remained open for correction.
+- Commit `a959ed8` changed safe application output to one JSON line per event and added a regression test.
+- Automated verification passed: 18 of 18 tests plus the production TypeScript build.
+- Revision `goldenpi-whatsapp-poc-00002-f7t` was deployed and now serves 100% of traffic.
+- Final anonymous invocation returned `403`; authenticated simulator invocation returned the expected approved response.
+- Cloud Logging stored `request.completed` as one structured `jsonPayload` record containing only method, path, status, trace ID, policy action, and latency.
+- Verified log latency was 31 ms. Message text, phone number, sender identifier, and customer data were absent.
 
 Completion gate:
 
@@ -335,3 +364,6 @@ The future WATI endpoint will be internet-reachable because WATI must call it. I
 - 2026-09-13 — Implemented T1.2 WATI inbound adapter boundary with a synthetic fixture and 17/17 tests. Awaiting Codespaces verification.
 - 2026-09-13 — Approved and committed T1.2 as `323a49d`.
 - 2026-09-13 — Started T1.3 private Cloud Run deployment preparation using source buildpacks and a dedicated no-data-access runtime identity.
+- 2026-09-13 — Deployed private Cloud Run revision `goldenpi-whatsapp-poc-00001-zzs`; verified IAM-only access and the fixed simulator response.
+- 2026-09-13 — Corrected fragmented stdout logging in commit `a959ed8`, passed 18/18 tests, and deployed revision `goldenpi-whatsapp-poc-00002-f7t`.
+- 2026-09-13 — Verified one-row structured `jsonPayload` logging with no message or sender PII. Closed T1.3 and proposed T1.4 controlled Gemini integration.
