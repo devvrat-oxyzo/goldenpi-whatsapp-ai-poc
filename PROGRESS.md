@@ -31,7 +31,7 @@ Build a modular, provider-agnostic REST backend for a GoldenPi WhatsApp support 
 
 ### T1.4 — Connect Gemini for controlled public-information answers
 
-Status: **Local implementation complete; Codespaces and Cloud Run verification pending**
+Status: **Complete**
 
 Approved by the user on 2026-09-13.
 
@@ -45,9 +45,19 @@ Implementation checkpoint:
 - Kept BigQuery, customer data, external tools, and WATI outbound calls disabled.
 - Added safe diagnostic fields for model, prompt ID/version, skill ID, and response source.
 - Selected configurable `gemini-3.5-flash` in `asia-south1`; no API key is stored.
-- Local TypeScript validation, 22 of 22 tests, and the production build passed.
+- Initial local TypeScript validation, 22 of 22 tests, and the production build passed.
 - First live Vertex AI invocation succeeded technically, but its 300-token output allowance produced a truncated answer; T1.4 remained open.
 - Corrective checkpoint sets Gemini 3.5 Flash thinking to `LOW`, raises the total output allowance to 1,024 tokens, and rejects `MAX_TOKENS` responses so incomplete text falls back safely.
+- Correction committed as `c4c57c9`; final TypeScript validation, 23 of 23 tests, and the production build passed.
+- Granted only `roles/aiplatform.user` to the dedicated runtime service account; no BigQuery role was granted.
+- Deployed revision `goldenpi-whatsapp-poc-00004-jwd` with 100% of traffic.
+- Anonymous service invocation remained blocked with `403`.
+- Live Gemini response was complete, neutral, under the requested length, and included principal, maturity, coupon, and material risk concepts.
+- Live diagnostics confirmed `VERTEX_AI_GEMINI`, `gemini-3.5-flash`, prompt version `1.0.0`, skill `PUBLIC_BOND_EDUCATION`, and `customerDataAccessed: false`.
+- A live customer-specific request was blocked with `REQUIRE_AUTHENTICATION` and `POC_FIXED` in 2 ms, proving Gemini was not invoked for that path.
+- The approved Gemini request completed in 2,014 ms. Structured logs contained only safe metadata and no question, answer, phone number, or sender data.
+
+Next proposed task: **T1.5 — Exercise the WATI-shaped webhook route on private Cloud Run and close Sprint 1.** It will use only the existing synthetic fixture and Google IAM; no WATI subscription, external webhook, or phone number is required.
 
 ## Active task
 
@@ -201,7 +211,8 @@ Completion criteria:
 | T1.1 | Scaffold REST API with health endpoint | P0 | Complete |
 | T1.2 | Implement initial provider webhook adapter | P0 | Complete |
 | T1.3 | Deploy and test fixed reply | P0 | Complete |
-| T1.4 | Connect controlled Gemini public-information response | P0 | Local implementation complete; verification pending |
+| T1.4 | Connect controlled Gemini public-information response | P0 | Complete |
+| T1.5 | Verify synthetic WATI webhook on private Cloud Run | P0 | Proposed |
 | T2.1 | Define customer-verification policy | P0 | Not started |
 | T2.2 | Create/read approved BigQuery customer view | P0 | Not started |
 | T2.3 | Add OTP or secure-link flow for sensitive data | P0 | Not started |
@@ -381,3 +392,5 @@ The future WATI endpoint will be internet-reachable because WATI must call it. I
 - 2026-09-13 — Verified one-row structured `jsonPayload` logging with no message or sender PII. Closed T1.3 and proposed T1.4 controlled Gemini integration.
 - 2026-09-13 — User approved T1.4. Added versioned Markdown prompt modules, a mockable Gemini boundary, deterministic routing, safe fallback behavior, and 22 passing tests. Codespaces and live Vertex AI verification remain pending.
 - 2026-09-13 — First live Gemini call authenticated and used the intended prompt/model, but returned a truncated fragment. Kept T1.4 open and prepared a low-thinking, larger-output, truncation-safe correction.
+- 2026-09-13 — Committed correction `c4c57c9`, passed 23/23 tests, and deployed revision `goldenpi-whatsapp-poc-00004-jwd`.
+- 2026-09-13 — Verified a complete Gemini public-information answer, a policy-blocked customer request without model invocation, IAM-only service access, and PII-safe structured logs. Closed T1.4 and proposed T1.5.
