@@ -1,0 +1,27 @@
+{
+  "name": "goldenpi-chat-demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.x.x"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/src/server.js",
+    "dev": "node --watch --import=tsx src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm test"
+  },
+  "dependencies": {
+    "google-auth-library": "10.9.1",
+    "zod": "4.6.4"
+  },
+  "devDependencies": {
+    "@types/node": "26.5.1",
+    "tsx": "4.20.6",
+    "typescript": "7.0.2",
+    "vitest": "5.0.0"
+  }
+}

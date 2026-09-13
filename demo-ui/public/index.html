@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>GoldenPi Assistant Lab</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="GoldenPi Assistant Lab home">
+        <span class="brand-mark" aria-hidden="true">π</span>
+        <span>
+          <strong>GoldenPi</strong>
+          <small>Assistant Lab</small>
+        </span>
+      </a>
+      <div class="environment"><span></span> Internal preview</div>
+    </header>
+
+    <main class="page-shell">
+      <section class="intro">
+        <p class="eyebrow">Controlled AI simulator</p>
+        <h1>Test the assistant before WhatsApp.</h1>
+        <p>See the customer-facing answer and the policy trail separately. Use synthetic questions only.</p>
+      </section>
+
+      <div class="workspace">
+        <section class="chat-card" aria-labelledby="chat-title">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Conversation</p>
+              <h2 id="chat-title">GoldenPi assistant</h2>
+            </div>
+            <button class="text-button" id="clear-button" type="button">Clear</button>
+          </div>
+
+          <div class="privacy-note" role="note">
+            <strong>Synthetic testing only.</strong> Do not enter names, phone numbers, account details or financial information.
+          </div>
+
+          <div class="presets" aria-label="Example test questions">
+            <button type="button" data-prompt="What is a bond?">What is a bond?</button>
+            <button type="button" data-prompt="Show my portfolio">Show my portfolio</button>
+            <button type="button" data-prompt="Which bond should I buy?">Ask for a recommendation</button>
+            <button type="button" data-prompt="Help me place an order">Request a transaction</button>
+          </div>
+
+          <div class="messages" id="messages" aria-live="polite">
+            <article class="message assistant-message">
+              <div class="avatar" aria-hidden="true">π</div>
+              <div>
+                <p class="message-author">GoldenPi assistant</p>
+                <p>Ask a synthetic question to inspect how classification, policy and Gemini behave.</p>
+              </div>
+            </article>
+          </div>
+
+          <form class="composer" id="chat-form">
+            <label class="sr-only" for="message-input">Synthetic test message</label>
+            <textarea id="message-input" maxlength="1000" rows="2" placeholder="Type a synthetic test question…" required></textarea>
+            <button class="send-button" id="send-button" type="submit">
+              <span>Send</span><span aria-hidden="true">↑</span>
+            </button>
+          </form>
+        </section>
+
+        <aside class="trace-card" aria-labelledby="trace-title">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Internal only</p>
+              <h2 id="trace-title">Decision trace</h2>
+            </div>
+            <span class="status-badge" id="trace-status">Waiting</span>
+          </div>
+
+          <div class="empty-trace" id="empty-trace">
+            <div class="trace-icon" aria-hidden="true">⌁</div>
+            <p>Send a question to see the safe diagnostic trail.</p>
+          </div>
+
+          <dl class="trace-grid hidden" id="trace-grid">
+            <div><dt>Intent</dt><dd id="intent">—</dd></div>
+            <div><dt>Decision</dt><dd id="decision">—</dd></div>
+            <div><dt>Response source</dt><dd id="source">—</dd></div>
+            <div><dt>Model</dt><dd id="model">—</dd></div>
+            <div><dt>Prompt version</dt><dd id="prompt-version">—</dd></div>
+            <div><dt>Skill</dt><dd id="skill">—</dd></div>
+            <div><dt>Customer data</dt><dd id="customer-data">—</dd></div>
+            <div><dt>Human handoff</dt><dd id="human-handoff">—</dd></div>
+            <div><dt>Backend latency</dt><dd id="latency">—</dd></div>
+          </dl>
+
+          <div class="trace-id hidden" id="trace-id-block">
+            <span>Trace ID</span>
+            <code id="trace-id">—</code>
+            <button type="button" id="copy-trace">Copy</button>
+          </div>
+
+          <p class="trace-footer">Message and answer text are intentionally excluded from operational logs.</p>
+        </aside>
+      </div>
+    </main>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>

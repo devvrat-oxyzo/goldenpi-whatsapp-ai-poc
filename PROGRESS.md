@@ -29,26 +29,45 @@ Build a modular, provider-agnostic REST backend for a GoldenPi WhatsApp support 
 
 ## Current checkpoint
 
-### T1.5 — Verify the synthetic WATI webhook on private Cloud Run
+### T1.6 — Add a hosted internal chatbot simulator
 
-Status: **Complete**
+Status: **In progress — hosted IAP deployment checkpoint**
 
-Approved and completed on 2026-09-13.
+Scope agreed on 2026-09-13:
 
-Verification result:
+- Add a separate responsive UI service without changing the deployed backend.
+- Show the customer-facing response and internal policy diagnostics separately.
+- Keep browser access same-origin; server-side code alone invokes the private backend.
+- Use IAP for internal tester authentication when hosted.
+- Do not treat IAP identity as verified customer authentication.
+- Preserve the backend as the reusable policy/AI layer for future WhatsApp, website and mobile clients.
 
-- Sent the existing synthetic WATI fixture to `/v1/providers/wati/webhook` on private Cloud Run revision `goldenpi-whatsapp-poc-00004-jwd`.
-- The provider boundary returned `accepted: true` and preserved synthetic provider message ID `wamid.poc-message-001`.
-- The WATI adapter normalized the payload before deterministic policy evaluation.
-- Policy returned `PUBLIC_INFORMATION` and `ALLOW_AI_RESPONSE`.
-- Gemini 3.5 Flash generated a complete answer using prompt version `1.0.0` and skill `PUBLIC_BOND_EDUCATION`.
-- Diagnostics confirmed `customerDataAccessed: false`.
-- The end-to-end webhook path completed in 1,657 ms.
-- Cloud Logging stored the event as one structured record with an empty `textPayload`.
-- Programmatic log scanning returned `messageTextFound: false` and `rawSenderFound: false`.
-- No WATI subscription, WATI credential, phone number, external webhook, or outbound WATI call was used.
+Local implementation evidence:
 
-Next proposed task: **T2.1 — Define the customer-verification policy and trust boundaries.** This is a design-and-test checkpoint only; it will not query BigQuery or expose customer data.
+- Added `demo-ui` as a standalone Node.js/TypeScript Cloud Run service.
+- Added a local mock for public information, customer-specific data, recommendation and transaction paths.
+- Added request validation, generic upstream errors and defensive browser headers.
+- Added PII-safe structured logs that omit message and answer text.
+- Demo UI typecheck, 5 automated tests and production build passed.
+- Manual local calls returned all four expected policy decisions with `customerDataAccessed: false`.
+
+T1.6a local review result:
+
+- Approved on 2026-09-14 after testing through a private Codespaces port on iPad.
+- All four presets returned the expected policy presentation.
+- Tablet layout, wording, chat experience and decision trace were accepted.
+
+Active T1.6b gate:
+
+- Commit the approved T1.6a implementation to GitHub.
+- Confirm or create a dedicated UI runtime service account with no BigQuery access.
+- Grant that identity service-level invocation access to the private backend only.
+- Deploy `goldenpi-chat-demo` as a separate Cloud Run service in `asia-south1`.
+- Protect the demo service with IAP and grant access only to named internal testers.
+- Verify the UI invokes the real private backend and returns a controlled Gemini response.
+- Confirm anonymous UI access is denied and logs remain PII-safe.
+
+Queued after T1.6: **T2.1 — Define the customer-verification policy and trust boundaries.**
 
 ## Active task
 
@@ -192,6 +211,7 @@ Completion criteria:
 | ADR-007 | Host the POC in `goldenpi-data-layer`; migrate production ingress to a separate project | Accepted |
 | ADR-008 | Keep the POC Cloud Run service private and invoke it with Google IAM | Accepted |
 | ADR-009 | Validate logic through a provider simulator before purchasing WATI | Accepted |
+| ADR-010 | Host the internal demo as a separate IAP-protected UI/BFF that invokes the private backend | Accepted |
 
 ## Product backlog
 
@@ -204,6 +224,7 @@ Completion criteria:
 | T1.3 | Deploy and test fixed reply | P0 | Complete |
 | T1.4 | Connect controlled Gemini public-information response | P0 | Complete |
 | T1.5 | Verify synthetic WATI webhook on private Cloud Run | P0 | Complete |
+| T1.6 | Add hosted internal chatbot simulator | P0 | In progress |
 | T2.1 | Define customer-verification policy | P0 | Not started |
 | T2.2 | Create/read approved BigQuery customer view | P0 | Not started |
 | T2.3 | Add OTP or secure-link flow for sensitive data | P0 | Not started |
@@ -386,3 +407,5 @@ The future WATI endpoint will be internet-reachable because WATI must call it. I
 - 2026-09-13 — Committed correction `c4c57c9`, passed 23/23 tests, and deployed revision `goldenpi-whatsapp-poc-00004-jwd`.
 - 2026-09-13 — Verified a complete Gemini public-information answer, a policy-blocked customer request without model invocation, IAM-only service access, and PII-safe structured logs. Closed T1.4 and proposed T1.5.
 - 2026-09-13 — Sent the synthetic WATI fixture through private Cloud Run, received a controlled Gemini answer, verified 1,657 ms latency and found no message text or raw sender identifier in logs. Closed T1.5 and Sprint 1; proposed T2.1.
+- 2026-09-13 — Started T1.6 as an approved detour before T2.1. Implemented a separate responsive demo UI, local policy mock, server-side private-backend bridge, safe diagnostics and 5 passing UI tests. Awaiting iPad/Codespaces review before hosted IAP deployment.
+- 2026-09-14 — Approved T1.6a after iPad/Codespaces review. All four local policy paths and the tablet interface passed. Started T1.6b for a separate IAP-protected Cloud Run deployment connected to the private backend.

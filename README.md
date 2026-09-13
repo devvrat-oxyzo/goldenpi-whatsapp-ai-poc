@@ -50,6 +50,15 @@ No BigQuery access or outbound WATI calls occur in these checkpoints.
 - BigQuery and customer data remain disabled.
 - The model, prompt ID, prompt version, skill ID, and response source are observable without logging the question or answer.
 
+### T1.6 — Internal demo UI (in progress)
+
+- Separate responsive service under `demo-ui/`; the existing backend remains unchanged.
+- Same-origin server bridge keeps Google credentials and the private backend URL out of browser logic.
+- Customer answer and safe policy trace are displayed separately.
+- Local mock covers public education, authentication, recommendation handoff, and transaction handoff.
+- The hosted design uses Cloud Run IAP for internal tester access and a dedicated service identity for backend invocation.
+- See [`docs/hosted-demo-ui.md`](docs/hosted-demo-ui.md) for the iPad/Codespaces review flow.
+
 ## Rule matrix
 
 | Intent | Authentication | Action | Customer data | AI response |
@@ -95,7 +104,18 @@ curl -H 'content-type: application/json' \
   http://localhost:8080/v1/providers/wati/webhook
 ```
 
-Expected validation result: TypeScript completes without errors and all 22 tests pass.
+Expected backend validation result: TypeScript completes without errors and all 23 backend tests pass.
+
+Validate the separate demo UI with:
+
+```bash
+cd demo-ui
+npm ci
+npm run check
+npm run build
+```
+
+Expected UI validation result: TypeScript completes without errors and all 5 UI tests pass.
 
 ## Gemini configuration
 
