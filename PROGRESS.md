@@ -20,7 +20,7 @@ Build a modular, provider-agnostic REST backend for a GoldenPi WhatsApp support 
 | Phase | Status | Exit condition |
 | --- | --- | --- |
 | Sprint 0 — Access and scope | Complete | Required access verified and first use case fixed |
-| Sprint 1 — Webhook vertical slice | In progress | Test WhatsApp message reaches Cloud Run and receives a fixed reply |
+| Sprint 1 — Webhook vertical slice | Complete | Synthetic WATI message reached private Cloud Run and received a controlled Gemini reply |
 | Sprint 2 — Customer verification | Not started | Registered test customer is safely identified |
 | Sprint 3 — Knowledge answers | Not started | Gemini answers from approved sources with citations/fallback |
 | Sprint 4 — Conversation reliability | Not started | State, retries, deduplication, logging, and handoff work |
@@ -29,35 +29,26 @@ Build a modular, provider-agnostic REST backend for a GoldenPi WhatsApp support 
 
 ## Current checkpoint
 
-### T1.4 — Connect Gemini for controlled public-information answers
+### T1.5 — Verify the synthetic WATI webhook on private Cloud Run
 
 Status: **Complete**
 
-Approved by the user on 2026-09-13.
+Approved and completed on 2026-09-13.
 
-Implementation checkpoint:
+Verification result:
 
-- Added version-controlled `prompts/master.md`.
-- Added allowlisted `prompts/skills/public-bond-education/SKILL.md`.
-- Added a mockable AI-responder boundary and Vertex AI implementation using `@google/genai`.
-- Gemini is called only after deterministic policy returns `ALLOW_AI_RESPONSE`.
-- Added a fixed approved fallback for Vertex AI errors or empty responses.
-- Kept BigQuery, customer data, external tools, and WATI outbound calls disabled.
-- Added safe diagnostic fields for model, prompt ID/version, skill ID, and response source.
-- Selected configurable `gemini-3.5-flash` in `asia-south1`; no API key is stored.
-- Initial local TypeScript validation, 22 of 22 tests, and the production build passed.
-- First live Vertex AI invocation succeeded technically, but its 300-token output allowance produced a truncated answer; T1.4 remained open.
-- Corrective checkpoint sets Gemini 3.5 Flash thinking to `LOW`, raises the total output allowance to 1,024 tokens, and rejects `MAX_TOKENS` responses so incomplete text falls back safely.
-- Correction committed as `c4c57c9`; final TypeScript validation, 23 of 23 tests, and the production build passed.
-- Granted only `roles/aiplatform.user` to the dedicated runtime service account; no BigQuery role was granted.
-- Deployed revision `goldenpi-whatsapp-poc-00004-jwd` with 100% of traffic.
-- Anonymous service invocation remained blocked with `403`.
-- Live Gemini response was complete, neutral, under the requested length, and included principal, maturity, coupon, and material risk concepts.
-- Live diagnostics confirmed `VERTEX_AI_GEMINI`, `gemini-3.5-flash`, prompt version `1.0.0`, skill `PUBLIC_BOND_EDUCATION`, and `customerDataAccessed: false`.
-- A live customer-specific request was blocked with `REQUIRE_AUTHENTICATION` and `POC_FIXED` in 2 ms, proving Gemini was not invoked for that path.
-- The approved Gemini request completed in 2,014 ms. Structured logs contained only safe metadata and no question, answer, phone number, or sender data.
+- Sent the existing synthetic WATI fixture to `/v1/providers/wati/webhook` on private Cloud Run revision `goldenpi-whatsapp-poc-00004-jwd`.
+- The provider boundary returned `accepted: true` and preserved synthetic provider message ID `wamid.poc-message-001`.
+- The WATI adapter normalized the payload before deterministic policy evaluation.
+- Policy returned `PUBLIC_INFORMATION` and `ALLOW_AI_RESPONSE`.
+- Gemini 3.5 Flash generated a complete answer using prompt version `1.0.0` and skill `PUBLIC_BOND_EDUCATION`.
+- Diagnostics confirmed `customerDataAccessed: false`.
+- The end-to-end webhook path completed in 1,657 ms.
+- Cloud Logging stored the event as one structured record with an empty `textPayload`.
+- Programmatic log scanning returned `messageTextFound: false` and `rawSenderFound: false`.
+- No WATI subscription, WATI credential, phone number, external webhook, or outbound WATI call was used.
 
-Next proposed task: **T1.5 — Exercise the WATI-shaped webhook route on private Cloud Run and close Sprint 1.** It will use only the existing synthetic fixture and Google IAM; no WATI subscription, external webhook, or phone number is required.
+Next proposed task: **T2.1 — Define the customer-verification policy and trust boundaries.** This is a design-and-test checkpoint only; it will not query BigQuery or expose customer data.
 
 ## Active task
 
@@ -182,7 +173,7 @@ Completion criteria:
 | API management | Permission or admin contact to enable APIs | Confirmed through successful service commands |
 | Cloud Run | Permission to deploy and configure ingress | Confirmed through private deployment in `asia-south1` |
 | IAM | Permission or admin contact to create/configure a service account | Confirmed; dedicated runtime identity deployed |
-| Vertex AI | API enabled, usable region, and model access | API enabled; model invocation proof moves to Sprint 1 |
+| Vertex AI | API enabled, usable region, and model access | Confirmed with live Gemini 3.5 Flash invocation in `asia-south1` |
 | BigQuery | Read-only access to approved data/views | User access confirmed; runtime access pending |
 | WhatsApp provider | Provider name, sandbox number, API token, webhook settings | WATI selected; credentials deferred |
 | Security | POC invocation protected by Google IAM; future webhook control documented | POC approach selected; production review pending |
@@ -212,7 +203,7 @@ Completion criteria:
 | T1.2 | Implement initial provider webhook adapter | P0 | Complete |
 | T1.3 | Deploy and test fixed reply | P0 | Complete |
 | T1.4 | Connect controlled Gemini public-information response | P0 | Complete |
-| T1.5 | Verify synthetic WATI webhook on private Cloud Run | P0 | Proposed |
+| T1.5 | Verify synthetic WATI webhook on private Cloud Run | P0 | Complete |
 | T2.1 | Define customer-verification policy | P0 | Not started |
 | T2.2 | Create/read approved BigQuery customer view | P0 | Not started |
 | T2.3 | Add OTP or secure-link flow for sensitive data | P0 | Not started |
@@ -394,3 +385,4 @@ The future WATI endpoint will be internet-reachable because WATI must call it. I
 - 2026-09-13 — First live Gemini call authenticated and used the intended prompt/model, but returned a truncated fragment. Kept T1.4 open and prepared a low-thinking, larger-output, truncation-safe correction.
 - 2026-09-13 — Committed correction `c4c57c9`, passed 23/23 tests, and deployed revision `goldenpi-whatsapp-poc-00004-jwd`.
 - 2026-09-13 — Verified a complete Gemini public-information answer, a policy-blocked customer request without model invocation, IAM-only service access, and PII-safe structured logs. Closed T1.4 and proposed T1.5.
+- 2026-09-13 — Sent the synthetic WATI fixture through private Cloud Run, received a controlled Gemini answer, verified 1,657 ms latency and found no message text or raw sender identifier in logs. Closed T1.5 and Sprint 1; proposed T2.1.
