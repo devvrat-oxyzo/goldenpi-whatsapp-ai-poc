@@ -67,6 +67,14 @@ Active T1.6b gate:
 - Verify the UI invokes the real private backend and returns a controlled Gemini response.
 - Confirm anonymous UI access is denied and logs remain PII-safe.
 
+Deployment incident and correction:
+
+- Initial UI revision `goldenpi-chat-demo-00001-554` failed its startup probe.
+- Cloud Logging showed the runtime command attempted `npm run build` and failed with `tsc: not found` after production-only dependency installation.
+- IAM, IAP and backend connectivity were not the cause; the failed revision never served traffic.
+- Corrected the UI `Procfile` to execute the build artifact directly with `node dist/src/server.js`.
+- Added a deployment regression test to prevent build commands from returning to the runtime entrypoint.
+
 Queued after T1.6: **T2.1 — Define the customer-verification policy and trust boundaries.**
 
 ## Active task
