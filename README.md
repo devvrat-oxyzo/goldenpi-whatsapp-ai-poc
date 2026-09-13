@@ -32,6 +32,14 @@ This package defines the provider-neutral boundary between a WhatsApp provider a
 
 No Google Cloud mutations, BigQuery access, Gemini calls, or WATI calls occur in these checkpoints.
 
+### T1.3 — Cloud Run packaging
+
+- Google Node.js buildpack-compatible source layout.
+- Explicit Node.js 24 runtime selection.
+- Direct production entry point through `Procfile`.
+- `.gcloudignore` excludes local, generated, secret, and archive files.
+- Private deployment runbook in `docs/cloud-run-poc.md`.
+
 ## Rule matrix
 
 | Intent | Authentication | Action | Customer data | AI response |
@@ -87,3 +95,5 @@ T1.3 will deploy the fixed-response service privately to Cloud Run:
 - Google IAM-authenticated invocation
 - `asia-south1` deployment
 - no BigQuery, Gemini, or WATI credentials yet
+
+Follow [`docs/cloud-run-poc.md`](docs/cloud-run-poc.md) only after the repository checkpoint has been verified.

@@ -177,8 +177,8 @@ Completion criteria:
 | T0.1 | Verify access and select first vertical slice | P0 | Complete |
 | T0.2 | Define normalized inbound/outbound message contract | P0 | Complete |
 | T1.1 | Scaffold REST API with health endpoint | P0 | Complete |
-| T1.2 | Implement initial provider webhook adapter | P0 | Ready for Codespaces verification |
-| T1.3 | Deploy and test fixed reply | P0 | Not started |
+| T1.2 | Implement initial provider webhook adapter | P0 | Complete |
+| T1.3 | Deploy and test fixed reply | P0 | Deployment preparation in progress |
 | T2.1 | Define customer-verification policy | P0 | Not started |
 | T2.2 | Create/read approved BigQuery customer view | P0 | Not started |
 | T2.3 | Add OTP or secure-link flow for sensitive data | P0 | Not started |
@@ -264,7 +264,7 @@ Codespaces verification and approval completed on 2026-09-13. T1.1 was committed
 
 ### T1.2 — Add the WATI inbound adapter boundary
 
-Status: **Ready for Codespaces verification**
+Status: **Complete**
 
 Implementation result:
 
@@ -285,6 +285,32 @@ Completion gate:
 - Run `npm ci`, `npm run check`, and `npm run build` in Codespaces.
 - Start the service and submit the saved WATI fixture.
 - Confirm that the provider boundary is accepted before private Cloud Run deployment.
+
+Codespaces verification and provisional approval completed on 2026-09-13. T1.2 was committed to GitHub as `323a49d` after 17 of 17 tests, a production build, and a manual synthetic WATI webhook test passed.
+
+### T1.3 — Deploy and test the fixed reply privately
+
+Status: **Deployment preparation in progress**
+
+Preparation result:
+
+- Selected Cloud Run source deployment using Google Node.js buildpacks.
+- Pinned the deployment runtime to Node.js 24.
+- Added `Procfile` with the production entry point.
+- Added `.gcloudignore` to exclude secrets, local dependencies, compiled output, coverage, Git data, and archives.
+- Added `docs/cloud-run-poc.md` with explicit private deployment and authenticated health-test commands.
+- Selected runtime service account `gp-whatsapp-poc-runtime` with no BigQuery, Vertex AI, WATI, or Secret Manager roles.
+- Selected service name `goldenpi-whatsapp-poc` in `asia-south1`.
+
+Completion gate:
+
+- Commit and verify the deployment preparation files.
+- Clone the clean repository in Google Cloud Shell.
+- Create or confirm the dedicated runtime service account.
+- Deploy with anonymous access disabled.
+- Confirm the service identity, region, ingress setting, and IAM policy.
+- Invoke `/health` and `/v1/simulate` using a Google identity token.
+- Review PII-safe Cloud Logging output.
 
 ## Deferred production-ingress design
 
@@ -307,3 +333,5 @@ The future WATI endpoint will be internet-reachable because WATI must call it. I
 - 2026-09-13 — Approved and committed T0.2 as `8dc95d0`.
 - 2026-09-13 — Implemented and verified T1.1 REST simulator service with 13/13 tests; committed as `a4ac9c0`.
 - 2026-09-13 — Implemented T1.2 WATI inbound adapter boundary with a synthetic fixture and 17/17 tests. Awaiting Codespaces verification.
+- 2026-09-13 — Approved and committed T1.2 as `323a49d`.
+- 2026-09-13 — Started T1.3 private Cloud Run deployment preparation using source buildpacks and a dedicated no-data-access runtime identity.
