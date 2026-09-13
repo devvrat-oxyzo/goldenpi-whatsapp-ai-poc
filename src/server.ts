@@ -6,9 +6,11 @@ const host = "0.0.0.0";
 const server = createApp();
 
 server.listen(port, host, () => {
-  console.info({
-    event: "server.started",
-    host,
-    port,
-  });
+  console.info(
+    JSON.stringify({
+      event: "server.started",
+      host,
+      port,
+    }),
+  );
 });

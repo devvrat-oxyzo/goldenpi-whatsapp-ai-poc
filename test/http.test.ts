@@ -1,7 +1,11 @@
 import { readFileSync } from "node:fs";
 import type { AddressInfo } from "node:net";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createApp, type SafeLogger } from "../src/http/app.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  createApp,
+  type SafeLogger,
+  writeSafeLog,
+} from "../src/http/app.js";
 
 const fixturePath = new URL(
   "../fixtures/public-bond-question.json",
@@ -81,6 +85,25 @@ describe("HTTP API", () => {
       traceId: fixture.inbound.traceId,
       policyAction: "ALLOW_AI_RESPONSE",
     });
+  });
+
+  it("writes each default log event as one JSON line", () => {
+    const consoleInfo = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    const event = {
+      event: "request.completed" as const,
+      method: "POST",
+      path: "/v1/simulate",
+      status: 200,
+      traceId: fixture.inbound.traceId,
+      policyAction: "ALLOW_AI_RESPONSE",
+      elapsedMs: 11,
+    };
+
+    writeSafeLog(event);
+
+    expect(consoleInfo).toHaveBeenCalledOnce();
+    expect(consoleInfo).toHaveBeenCalledWith(JSON.stringify(event));
+    consoleInfo.mockRestore();
   });
 
   it("returns 404 for unknown routes", async () => {

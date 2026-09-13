@@ -20,6 +20,10 @@ interface SafeLogEvent {
 
 export type SafeLogger = (event: SafeLogEvent) => void;
 
+export const writeSafeLog: SafeLogger = (event) => {
+  console.info(JSON.stringify(event));
+};
+
 function sendJson(response: ServerResponse, status: number, body: unknown): void {
   response.writeHead(status, { "content-type": "application/json; charset=utf-8" });
   response.end(JSON.stringify(body));
@@ -45,7 +49,7 @@ async function readJson(request: IncomingMessage): Promise<unknown> {
   return JSON.parse(Buffer.concat(chunks).toString("utf8"));
 }
 
-export function createApp(logger: SafeLogger = console.info) {
+export function createApp(logger: SafeLogger = writeSafeLog) {
   return createServer(async (request, response) => {
     const startedAt = performance.now();
     const method = request.method;
