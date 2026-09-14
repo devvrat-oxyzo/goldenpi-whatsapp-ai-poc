@@ -31,7 +31,7 @@ Build a modular, provider-agnostic REST backend for a GoldenPi WhatsApp support 
 
 ### T1.6 — Add a hosted internal chatbot simulator
 
-Status: **In progress — hosted IAP deployment checkpoint**
+Status: **Complete**
 
 Scope agreed on 2026-09-13:
 
@@ -48,7 +48,7 @@ Local implementation evidence:
 - Added a local mock for public information, customer-specific data, recommendation and transaction paths.
 - Added request validation, generic upstream errors and defensive browser headers.
 - Added PII-safe structured logs that omit message and answer text.
-- Demo UI typecheck, 5 automated tests and production build passed.
+- Demo UI typecheck, 6 automated tests and production build passed.
 - Manual local calls returned all four expected policy decisions with `customerDataAccessed: false`.
 
 T1.6a local review result:
@@ -57,15 +57,21 @@ T1.6a local review result:
 - All four presets returned the expected policy presentation.
 - Tablet layout, wording, chat experience and decision trace were accepted.
 
-Active T1.6b gate:
+T1.6b hosted verification result:
 
-- Commit the approved T1.6a implementation to GitHub.
-- Confirm or create a dedicated UI runtime service account with no BigQuery access.
-- Grant that identity service-level invocation access to the private backend only.
-- Deploy `goldenpi-chat-demo` as a separate Cloud Run service in `asia-south1`.
-- Protect the demo service with IAP and grant access only to named internal testers.
-- Verify the UI invokes the real private backend and returns a controlled Gemini response.
-- Confirm anonymous UI access is denied and logs remain PII-safe.
+- Committed the UI as `15f34a0` and the startup correction as `c9911f3`.
+- Created `gp-chat-demo-runtime@goldenpi-data-layer.iam.gserviceaccount.com` with no project-wide or BigQuery role.
+- Granted that identity `roles/run.invoker` only on private service `goldenpi-whatsapp-poc`.
+- Deployed `goldenpi-chat-demo` revision `goldenpi-chat-demo-00002-4x5` in `asia-south1`, serving 100% of traffic.
+- Enabled direct Cloud Run IAP and granted `devvrat.singh@goldenpi.com` access.
+- Confirmed the GoldenPi Workspace identity can open the UI while the Oxyzo identity is rejected by the organization-restricted managed IAP client.
+- Retained the currently ineffective Oxyzo IAP binding at the user's request; remove it before enabling external/custom OAuth or production use.
+- Submitted `What is a bond?` through the hosted UI and received `ALLOW_AI_RESPONSE` from Gemini 3.5 Flash using prompt `1.0.0` and skill `PUBLIC_BOND_EDUCATION`.
+- Confirmed `customerDataAccessed: false`.
+- Correlated trace `8a4ab7fc-faf7-4494-9580-e1765a2e2491` across the UI and backend services.
+- Measured 1,887 ms backend processing and 2,947 ms end-to-end UI processing.
+- Final application-log scan returned `questionFound: false`, `answerFound: false`, and `userIdentityFound: false`.
+- Cloud Resource Manager API was enabled after an explicit deployment prompt.
 
 Deployment incident and correction:
 
@@ -75,7 +81,7 @@ Deployment incident and correction:
 - Corrected the UI `Procfile` to execute the build artifact directly with `node dist/src/server.js`.
 - Added a deployment regression test to prevent build commands from returning to the runtime entrypoint.
 
-Queued after T1.6: **T2.1 — Define the customer-verification policy and trust boundaries.**
+Next proposed task: **T2.1 — Define the customer-verification policy and trust boundaries.**
 
 ## Active task
 
@@ -232,7 +238,7 @@ Completion criteria:
 | T1.3 | Deploy and test fixed reply | P0 | Complete |
 | T1.4 | Connect controlled Gemini public-information response | P0 | Complete |
 | T1.5 | Verify synthetic WATI webhook on private Cloud Run | P0 | Complete |
-| T1.6 | Add hosted internal chatbot simulator | P0 | In progress |
+| T1.6 | Add hosted internal chatbot simulator | P0 | Complete |
 | T2.1 | Define customer-verification policy | P0 | Not started |
 | T2.2 | Create/read approved BigQuery customer view | P0 | Not started |
 | T2.3 | Add OTP or secure-link flow for sensitive data | P0 | Not started |
@@ -417,3 +423,4 @@ The future WATI endpoint will be internet-reachable because WATI must call it. I
 - 2026-09-13 — Sent the synthetic WATI fixture through private Cloud Run, received a controlled Gemini answer, verified 1,657 ms latency and found no message text or raw sender identifier in logs. Closed T1.5 and Sprint 1; proposed T2.1.
 - 2026-09-13 — Started T1.6 as an approved detour before T2.1. Implemented a separate responsive demo UI, local policy mock, server-side private-backend bridge, safe diagnostics and 5 passing UI tests. Awaiting iPad/Codespaces review before hosted IAP deployment.
 - 2026-09-14 — Approved T1.6a after iPad/Codespaces review. All four local policy paths and the tablet interface passed. Started T1.6b for a separate IAP-protected Cloud Run deployment connected to the private backend.
+- 2026-09-14 — Deployed corrected UI revision `goldenpi-chat-demo-00002-4x5`, verified GoldenPi Workspace IAP access, invoked the real private Gemini backend, correlated safe logs across both services, and confirmed question, answer and identity text were absent. Closed T1.6.
